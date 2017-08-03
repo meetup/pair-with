@@ -110,7 +110,7 @@ const freeTime = (primary, invites) => {
 //module.exports.freeTime = freeTime
 
 // returns promising resolving to response from calendar events insert api
-modules.exports.bookTime = (primary, invites) => {
+module.exports.bookTime = (primary, invites) => {
     return freeTime(primary, invites).then((times) => {
         return new Promise(
             (resolve, reject) => {
