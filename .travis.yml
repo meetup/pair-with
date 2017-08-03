@@ -38,6 +38,7 @@ before_install:
   - gcloud auth activate-service-account --key-file client-secret.json
 
   - echo $GOOGLE_CREDENTIALS > credentials.json
+  - echo $MENTIONDB > mentiondb.json
 
 script:
   echo make test
