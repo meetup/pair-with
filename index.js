@@ -2,6 +2,11 @@
 
 require('dotenv').config()
 
+// slack api
+// https://github.com/slackapi/node-slack-sdk#posting-a-message-with-web-api
+var WebClient = require('@slack/client').WebClient
+var slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+
 // google api
 const google = require('googleapis');
 const calendar = google.calendar('v3')
