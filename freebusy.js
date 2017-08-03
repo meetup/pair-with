@@ -176,6 +176,7 @@ module.exports.bookTime = (primary, invites) => {
                         {
                             auth: jwtClient,
                             calendarId: "primary",
+                            sendNotifications: true,
                             resource: eventParams
                         },
                         (err, response) => {
