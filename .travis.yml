@@ -39,6 +39,7 @@ before_install:
 
   - echo $GOOGLE_CREDENTIALS > credentials.json
   - echo $MENTIONDB > mentiondb.json
+  - echo $STATIONDB > stationdb.json
 
 script:
   echo make test
