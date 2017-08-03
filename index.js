@@ -2,6 +2,12 @@
 
 require('dotenv').config()
 
+// google api
+const google = require('googleapis');
+const calendar = google.calendar('v3')
+const key = require('./credentials.json')
+
+
 // return promise resolving to
 // successful message payload or string error
 const command = (cmd) => {
@@ -27,10 +33,10 @@ const authenticate = (payload) => {
 module.exports.pairWith = (req, res) => {
   return authenticate(req.body)
     .then((cmd) => {
-        command(cmd).then(
-          (payload) => res.json(payload)
-        )
+      command(cmd).then(
+        (payload) => res.json(payload)
+      )
     }).catch(
-      (err) => res.json({ text: err })
+    (err) => res.json({ text: err })
     )
 }

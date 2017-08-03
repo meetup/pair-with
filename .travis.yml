@@ -37,6 +37,8 @@ before_install:
   - echo $GCP_SECRET > client-secret.json
   - gcloud auth activate-service-account --key-file client-secret.json
 
+  - echo $GOOGLE_CREDENTIALS > credentials.json
+
 script:
   make test
 
