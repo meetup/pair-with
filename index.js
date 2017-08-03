@@ -15,9 +15,6 @@ const key = require('./credentials.json')
 
 // fixme: may need to respond quickly or slack ui will error out
 
-// 2 parse @mention names from cmd.text ( may need bot api credential )
-// https://github.com/slackapi/node-slack-sdk add npm slack client
-
 // 3 add freebusy api call including pair stations + @mentions ...
 
 // 4 make google api call to create calendar entry
@@ -35,8 +32,8 @@ const command = (cmd) => {
         const email = mentiondb[mention]
         if (email) {
           acc.push(email)
-          return acc
         }
+        return acc
       }, []
     )
     resolve({
