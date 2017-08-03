@@ -7,6 +7,19 @@ const google = require('googleapis');
 const calendar = google.calendar('v3')
 const key = require('./credentials.json')
 
+// fixme: may need to respond quickly or slack ui will error out
+
+// 1 create a map @mention -> emails
+
+// 2 parse @mention names from cmd.text ( may need bot api credential )
+// https://github.com/slackapi/node-slack-sdk add npm slack client
+
+// 3 add freebusy api call including pair stations + @mentions ...
+
+// 4 make google api call to create calendar entry
+
+// 5 profit
+
 
 // return promise resolving to
 // successful message payload or string error

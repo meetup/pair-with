@@ -40,7 +40,7 @@ before_install:
   - echo $GOOGLE_CREDENTIALS > credentials.json
 
 script:
-  make test
+  echo make test
 
 deploy:
   - provider: script
