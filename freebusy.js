@@ -59,6 +59,7 @@ const freeTime = (primary, invites) => {
 
                     const transform = (email) => {
                         // Create busy time blocks from freebusy response and add "unbookable" hours
+                        // Make sure the time is added in so it's sorted
                         const busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
                             return {
                                 start: new Date(block.start),
@@ -73,6 +74,7 @@ const freeTime = (primary, invites) => {
                         if (busyTimes[0].start > new Date()) {
                             freeTimes.push({ start: new Date(), end: busyTimes[0].start })
                         }
+                        // Find the gaps in busy times to create "free times" blocks
                         for (var i = 0; i < busyTimes.length; i++) {
                             const block = busyTimes[i]
                             const next = busyTimes[i + 1]
@@ -85,7 +87,7 @@ const freeTime = (primary, invites) => {
                             }
                         }
                         return {
-                            email: email, busy: busyTimes.map(toLocalTimeBlock), free: freeTimes
+                            email: email, busy: busyTimes, free: freeTimes
                         }
                     }
 
@@ -127,7 +129,8 @@ module.exports.bookTime = (primary, invites) => {
                 var overlaps = []
                 for (var i = 1; i < times.people.length; i++) {
                     const other = times.people[i]
-                    console.log("comparing " + firstPerson.email + " to " + other.email)
+
+
                     overlaps = overlaps.concat(
                         firstPerson.free.reduce((acc, firstBlock) => {
                             const overlap = other.free.find(
