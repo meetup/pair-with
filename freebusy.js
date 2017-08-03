@@ -15,6 +15,10 @@ const jwtClient = new google.auth.JWT(
     "doug@meetup.com" // subject
 );
 
+const toLocalTimeBlock = (block) => {
+    return { start: block.start.toLocaleString(), end: block.end.toLocaleString() }
+}
+
 const freeTime = (primary, invites) => {
     return new Promise((resolve, reject) => {
         jwtClient.authorize(function (err, tokens) {
@@ -22,7 +26,7 @@ const freeTime = (primary, invites) => {
                 console.log(err);
                 return;
             }
-            const participants = invites.concat(primary)
+            const participants = [primary].concat(invites)
             const min = new Date()
             const max = new Date(min.getTime() + (1000 * 60 * 60 * 24 * 2))
             calendar.freebusy.query(
@@ -53,11 +57,6 @@ const freeTime = (primary, invites) => {
                         }
                     ]
 
-                    const toLocalTimeBlock = (block) => {
-                        return { start: block.start.toLocaleString(), end: block.end.toLocaleString() }
-                    }
-
-                    // station times
                     const transform = (email) => {
                         // Create busy time blocks from freebusy response and add "unbookable" hours
                         const busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
@@ -71,20 +70,22 @@ const freeTime = (primary, invites) => {
 
                         // Create the opposite of the "busy" block that google returns
                         const freeTimes = [];
+                        if (busyTimes[0].start > new Date()) {
+                            freeTimes.push({ start: new Date(), end: busyTimes[0].start })
+                        }
                         for (var i = 0; i < busyTimes.length; i++) {
                             const block = busyTimes[i]
                             const next = busyTimes[i + 1]
-                            // 
                             if (next) {
                                 // Add a free block of time from the end of your last meeting the start of the next meeting
                                 freeTimes.push({ start: block.end, end: new Date(next.start) })
                             } else {
-                                // Add a free block of time an hour long from the last meeting
-                                freeTimes.push({ start: block.end, end: new Date(block.end.getTime() + (1000 * 60 * 60)) })
+                                // Add a free block of time until the end of the day after the last meeting
+                                freeTimes.push({ start: block.end, end: closingTime })
                             }
                         }
                         return {
-                            email: email, busy: busyTimes.map(toLocalTimeBlock), free: freeTimes.map(toLocalTimeBlock)
+                            email: email, busy: busyTimes.map(toLocalTimeBlock), free: freeTimes
                         }
                     }
 
@@ -100,19 +101,97 @@ const freeTime = (primary, invites) => {
                         stations: stationBusyTimes,
                         people: pairerBusyTimes
                     })
-
-                    //console.table(stationBusyTimes)
-                    //stationBusyTimes.forEach()
-
                 }
             )
         })
     });
 }
 
-freeTime("doug@meetup.com", ["agaither@meetup.com"]).then((times) => {
-    console.log('stations')
-    console.dir(times.stations, { depth: 4, colors: true })
-    console.log('people')
-    console.dir(times.people, { depth: 4, colors: true })
-})
+//module.exports.freeTime = freeTime
+
+// returns promising resolving to response from calendar events insert api
+modules.exports.bookTime = (primary, invites) => {
+    return freeTime(primary, invites).then((times) => {
+        return new Promise(
+            (resolve, reject) => {
+                // find the list of overlapping free times between the first person and all other people
+                const firstPerson = times.people[0]
+                const secondPerson = times.people[1]
+                console.log("first person free")
+                console.dir(firstPerson.free.map(toLocalTimeBlock), { depth: 4, colors: true })
+
+                console.log("second person free")
+                console.dir(secondPerson.free.map(toLocalTimeBlock), { depth: 4, colors: true })
+
+                // const overlap = first.free[0].start >= second.free[0].start && first.free[0].end <= second.free[1].end)
+                var overlaps = []
+                for (var i = 1; i < times.people.length; i++) {
+                    const other = times.people[i]
+                    console.log("comparing " + firstPerson.email + " to " + other.email)
+                    overlaps = overlaps.concat(
+                        firstPerson.free.reduce((acc, firstBlock) => {
+                            const overlap = other.free.find(
+                                (otherBlock) => {
+                                    return firstBlock.start <= otherBlock.start && firstBlock.end >= otherBlock.end
+                                }
+                            );
+                            if (overlap) {
+                                acc.push(
+                                    {
+                                        start: new Date(Math.max(firstBlock.start, overlap.start)),
+                                        end: new Date(Math.min(firstBlock.end, overlap.end))
+                                    }
+                                )
+                            }
+                            return acc
+                        }, [])
+                    )
+                }
+
+                // find a station
+                const station = times.stations[0]
+
+                // book it
+                const overlap = overlaps[0]
+                if (overlap) {
+                    const eventParams = {
+                        summary: "pair time!",
+                        start: {
+                            dateTime: overlap.start.toISOString(),
+                            timeZone: 'US/Eastern'
+                        },
+                        end: {
+                            dateTime: overlap.end.toISOString(),
+                            timeZone: 'US/Eastern'
+                        },
+                        attendees: times.people.map(
+                            (person) => { return { email: person.email } }
+                        ).concat([
+                            { email: station.email }
+                        ])
+                    }
+                    console.dir(eventParams, { depth: 4, colors: true })
+
+                    calendar.events.insert(
+                        {
+                            auth: jwtClient,
+                            calendarId: "primary",
+                            resource: eventParams
+                        },
+                        (err, response) => {
+                            if (err) {
+                                console.log("error")
+                                console.log(err)
+                                reject("error booking event")
+                            } else {
+                                console.log(response)
+                                resolve(response)
+                            }
+                        }
+                    )
+                } else {
+                    reject("no overlap")
+                }
+            })
+    })
+}

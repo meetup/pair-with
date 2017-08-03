@@ -8,16 +8,12 @@ var WebClient = require('@slack/client').WebClient
 var slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 const mentiondb = require('./mentiondb.json')
 
-// google api
-const google = require('googleapis');
-const calendar = google.calendar('v3')
-const key = require('./credentials.json')
+// google interface
+const google = require("./freebusy.js")
 
 // fixme: may need to respond quickly or slack ui will error out
 
 // 3 add freebusy api call including pair stations + @mentions ...
-
-// 4 make google api call to create calendar entry
 
 // 5 profit
 
@@ -36,9 +32,20 @@ const command = (cmd) => {
         return acc
       }, []
     )
-    resolve({
-      text: `test ${emails}`
-    })
+    google.bookTime(mentiondb(cmd.user_name), emails)
+      .then((calendarResponse) => {
+        resolve({
+          text: `all set. you can change your pair session here <${calendarResponse.htmlLink}|here>`
+        })
+      })
+      .catch(
+      (err) => {
+        resolve({
+          text: `failed to book a room with ${cmd.text}`
+        })
+      }
+      )
+
   })
 }
 
