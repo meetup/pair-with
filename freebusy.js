@@ -20,8 +20,8 @@ const toLocalTimeBlock = (block) => {
 }
 
 const debug = (obj) => {
-    //console.dir(obj, { depth: 4, colors: true })
-    console.log(obj)
+    console.dir(obj, { depth: 4, colors: true })
+    //console.log(obj)
 }
 
 const intersection = (blockA, blockB) => {
@@ -40,6 +40,9 @@ const intersection = (blockA, blockB) => {
     }
     else if ((start <= oStart) && (oStart <= oEnd) && (oEnd <= end)) {
         return blockB
+    }
+    else if ((start == oStart) && (end == oEnd)) {
+        return blockA
     }
 }
 
@@ -81,10 +84,11 @@ const findFreeTimes = (primary, invites) => {
                     debug(response)
 
                     // Unbookable hours is from 6pm - 10am the next day (non working hours)
-                    const now = new Date()
-                    const closingTime = new Date(now.setHours(18, 0, 0))
-                    const openingTime = new Date(closingTime.getTime() + (1000 * 60 * 60 * 16))
-                    const unbookable = [
+                    var now = new Date()
+                    var closingTime = new Date(now.getTime())
+                    closingTime.setHours(18, 0, 0)
+                    var openingTime = new Date(closingTime.getTime() + (1000 * 60 * 60 * 16))
+                    var unbookable = [
                         {
                             start: closingTime,
                             end: openingTime
@@ -109,12 +113,12 @@ const findFreeTimes = (primary, invites) => {
                         var freeTimes = []
                         // If the next time your busy is in the future and now is
                         // in between opening and closing time, add some free time
-                        if (busyTimes[0].start > now && now < closingTime && now > openingTime) {
-                            console.log("free today")
-                            freeTimes.push({
+                        if (busyTimes[0].start > now) {//} && now < closingTime && now > openingTime) {
+                            var todayBlock = {
                                 start: now,
-                                end: Math.min(new Date(busyTimes[0].start, closingTime))
-                            })
+                                end: new Date(Math.min(new Date(busyTimes[0].start), closingTime))
+                            }
+                            freeTimes.push(todayBlock)
                         }
                         // Find the gaps in busy times to create "free times" blocks
                         for (var i = 0; i < busyTimes.length; i++) {
@@ -126,15 +130,19 @@ const findFreeTimes = (primary, invites) => {
                                 if (block.end.toLocaleString() != nextStart.toLocaleString()) {
                                     // Add a free block of time from the end of your last meeting the start of the next meeting
                                     freeTimes.push({ start: block.end, end: nextStart })
-                                } else {
-
                                 }
                             } else {
-                                freeTimes.push({ start: block.end, end: closingTime })
+                                // needs to be relative to the day of that end time
+                                var thatClosingTime = new Date(block.end.getTime())
+                                thatClosingTime.setHours(18, 0, 0)
+                                // if the last block ends at closing time, dont add it as free time
+                                if (block.end.toLocaleString() != thatClosingTime.toLocaleString()) {
+                                    freeTimes.push({ start: block.end, end: thatClosingTime })
+                                }
                             }
                         }
                         console.log("free times for " + email)
-                        debug(freeTimes)
+                        debug(freeTimes.map(toLocalTimeBlock))
                         return {
                             email: email, busy: busyTimes, free: freeTimes
                         }
@@ -174,6 +182,10 @@ const findOverlaps = (times) => {
                                 var intersect = intersection(firstBlock, otherBlock)
                                 if (intersect) {
                                     acc.push(intersect)
+                                } else {
+                                    console.log("not interection between the following")
+                                    debug(toLocalTimeBlock(firstBlock))
+                                    debug(toLocalTimeBlock(otherBlock))
                                 }
                             }
                         )
@@ -203,7 +215,7 @@ const findStation = (overlapResults) => {
                 return
             }
             console.log("overlaps")
-            debug(overlaps)
+            debug(overlaps.map(toLocalTimeBlock))
             console.log("station times")
             debug(times.stations)
             overlaps.forEach(
@@ -216,7 +228,15 @@ const findStation = (overlapResults) => {
                                     var end = overlap.end
                                     var oStart = stationBlock.start
                                     var oEnd = stationBlock.end
-                                    if ((start <= oStart) && (oStart < end) && (end < oEnd)) {
+
+                                    var fakeEnd = new Date(start.getTime() + (1000 * 60 * 30));
+                                    resolve({
+                                        station: station.email,
+                                        time: { start: start, end: fakeEnd }
+                                    })
+
+                                    // implied pair time half hour revisit!
+                                    /*if ((start <= oStart) && (oStart < end) && (end < oEnd)) {
                                         resolve({
                                             station: station.email,
                                             time: { start: oStart, end: end }
@@ -240,10 +260,10 @@ const findStation = (overlapResults) => {
                                     else if ((start <= oStart) && (oStart <= oEnd) && (oEnd <= end)) {
                                         resolve({
                                             station: station.email,
-                                            time: otherBlock
+                                            time: overlap
                                         })
                                         return
-                                    }
+                                    }*/
                                 }
                             )
                         }
@@ -267,7 +287,7 @@ module.exports.bookTime = (primary, invites) => {
                     // book it
                     if (stationResult) {
                         console.log("booking time")
-                        debug(stationResult)
+                        debug(toLocalTimeBlock(stationResult.time))
                         const eventParams = {
                             summary: "pair time!",
                             start: {
@@ -287,7 +307,7 @@ module.exports.bookTime = (primary, invites) => {
                         debug(eventParams)
                         // book it!
                         console.log("booking event")
-                        calendar.events.insert(
+                        /*calendar.events.insert(
                             {
                                 auth: jwtClient,
                                 calendarId: "primary",
@@ -304,7 +324,8 @@ module.exports.bookTime = (primary, invites) => {
                                     resolve(response)
                                 }
                             }
-                        )
+                        )*/
+                        resolve()
                     } else {
                         console.log("no overlap")
                         reject("no station overlap")
