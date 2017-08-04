@@ -4,8 +4,9 @@ require('dotenv').config()
 
 // slack api
 // https://github.com/slackapi/node-slack-sdk#posting-a-message-with-web-api
-var WebClient = require('@slack/client').WebClient
-var slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+const WebClient = require('@slack/client').WebClient
+const IncomingWebhook = require('@slack/client').IncomingWebhook
+const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 const mentiondb = require('./mentiondb.json')
 
 // google interface
@@ -70,8 +71,20 @@ const authenticate = (payload) => {
 module.exports.pairWith = (req, res) => {
   return authenticate(req.body)
     .then((cmd) => {
+      res.json({
+        text: `finding you some space`
+      })
       command(cmd).then(
-        (payload) => res.json(payload)
+        (payload) => {
+          var webhook = new IncomingWebhook(cmd.response_url);
+          webhook.send(payload, function (err, header, statusCode, body) {
+            if (err) {
+              console.log('Error:', err);
+            } else {
+              console.log('Received', statusCode, 'from Slack');
+            }
+          });
+        }
       )
     }).catch(
     (err) => res.json({ text: err })
