@@ -71,46 +71,45 @@ const authenticate = (payload) => {
 module.exports.pairWith = (req, res) => {
   return authenticate(req.body)
     .then((cmd) => {
-      return new Promise(
+      /*return new Promise(
         (resolve, reject) => {
           resolve(res.json({
             text: `finding you some space`
           }))
         }
       ).then(
-        (serverResponse) => {
-          console.log("following up with actual command")
-          const webhook = new IncomingWebhook(cmd.response_url)
-          return command(cmd).then(
-            (payload) => {
-              console.log("responding with...")
-              console.dir(payload, { depth: 4, colors: true })
-              webhook.send(payload, function (err, header, statusCode, body) {
-                if (err) {
-                  console.log('Error:', err);
-                } else {
-                  console.log('Received', statusCode, 'from Slack');
-                }
-              })
+        (serverResponse) => {*/
+      //console.log("following up with actual command")
+      //const webhook = new IncomingWebhook(cmd.response_url)
+      return command(cmd).then(
+        (payload) => {
+          console.log("responding with...")
+          console.dir(payload, { depth: 4, colors: true })
+          res.json(payload)
+          /*webhook.send(payload, function (err, header, statusCode, body) {
+            if (err) {
+              console.log('Error:', err);
+            } else {
+              console.log('Received', statusCode, 'from Slack');
             }
-          ).catch(
-            (err) => {
-              console.log("responding with error")
-              console.dir(err, { depth: 4, colors: true })
-              webhook.send({ text: err.toString() }, function (err, header, statusCode, body) {
-                if (err) {
-                  console.log('Error:', err);
-                } else {
-                  console.log('Received', statusCode, 'from Slack');
-                }
-              })
+          })*/
+        }
+      ).catch(
+        (err) => {
+          console.log("responding with error")
+          console.dir(err, { depth: 4, colors: true })
+          res.json(payload)
+          /*webhook.send({ text: err.toString() }, function (err, header, statusCode, body) {
+            if (err) {
+              console.log('Error:', err);
+            } else {
+              console.log('Received', statusCode, 'from Slack');
             }
-            )
+          })*/
         }
         )
-
-
-    }).catch(
+    }
+    ).catch(
     (err) => {
       console.log("command failed with error")
       console.dir(err, { depth: 4, colors: true })
