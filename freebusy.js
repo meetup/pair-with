@@ -292,11 +292,11 @@ module.exports.bookTime = (primary, invites) => {
                             summary: "pair time!",
                             start: {
                                 dateTime: stationResult.time.start.toISOString(),
-                                timeZone: 'america/new_york'
+                                timeZone: 'US/Eastern'
                             },
                             end: {
                                 dateTime: stationResult.time.end.toISOString(),
-                                timeZone: 'america/new_york'
+                                timeZone: 'US/Eastern'
                             },
                             attendees: invites.concat(primary).map(
                                 (email) => { return { email: email } }
