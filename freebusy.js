@@ -24,6 +24,10 @@ const debug = (obj) => {
     console.log(obj)
 }
 
+const nyNow = () => {
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }))
+}
+
 const intersection = (blockA, blockB) => {
     var start = blockA.start
     var end = blockA.end
@@ -59,7 +63,7 @@ const findFreeTimes = (primary, invites) => {
             }
             console.log("authenticated client")
             const participants = [primary].concat(invites)
-            const min = new Date()
+            const min = nyNow()
             const max = new Date(min.getTime() + (1000 * 60 * 60 * 24 * 2))
             console.log("finding freebusy time")
             calendar.freebusy.query(
@@ -84,7 +88,7 @@ const findFreeTimes = (primary, invites) => {
                     debug(response)
 
                     // Unbookable hours is from 6pm - 10am the next day (non working hours)
-                    var now = new Date()
+                    var now = nyNow()
                     var closingTime = new Date(now.getTime())
                     closingTime.setHours(18, 0, 0)
                     var openingTime = new Date(closingTime.getTime() + (1000 * 60 * 60 * 16))
