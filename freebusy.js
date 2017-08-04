@@ -39,19 +39,21 @@ const intersection = (blockA, blockB) => {
 }
 
 const findFreeTimes = (primary, invites) => {
-    console.log("finding email for primary " + primary)
-    console.log("and invites")
-    console.log(invites)
     return new Promise((resolve, reject) => {
+        console.log("finding free times for primary email " + primary)
+        console.log("and invites")
+        console.log(invites)
         jwtClient.authorize(function (err, tokens) {
             if (err) {
                 console.log(err);
                 reject(`something went wrong authenticating with google`)
                 return;
             }
+            console.log("authenticated client")
             const participants = [primary].concat(invites)
             const min = new Date()
             const max = new Date(min.getTime() + (1000 * 60 * 60 * 24 * 2))
+            console.log("finding freebusy time")
             calendar.freebusy.query(
                 {
                     auth: jwtClient,
@@ -65,6 +67,7 @@ const findFreeTimes = (primary, invites) => {
                 },
                 function freeBusyHandler(err, response) {
                     if (err) {
+                        console.log("error communicating with google freeBusy.query")
                         console.log(err)
                         reject(`something went wrong communicating with google calendar api`)
                         return
@@ -151,6 +154,7 @@ const findFreeTimes = (primary, invites) => {
 const findOverlaps = (times) => {
     return new Promise(
         (resolve, reject) => {
+            console.log("finding overlaps")
             const firstPerson = times.people[0]
             var overlaps = []
             for (var i = 1; i < times.people.length; i++) {
@@ -181,6 +185,7 @@ const findOverlaps = (times) => {
 const findStation = (overlapResults) => {
     return new Promise(
         (resolve, reject) => {
+            console.log("finding station")
             const times = overlapResults.times
             const overlaps = overlapResults.overlaps
             // find the first station that is open during one of these blocks of time
@@ -249,6 +254,7 @@ module.exports.bookTime = (primary, invites) => {
         .then((stationResult) => {
             return new Promise(
                 (resolve, reject) => {
+                    console.log("booking time")
                     console.dir(stationResult, { depth: 4, colors: true })
                     // book it
                     if (stationResult) {
