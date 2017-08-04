@@ -19,7 +19,26 @@ const toLocalTimeBlock = (block) => {
     return { start: block.start.toLocaleString(), end: block.end.toLocaleString() }
 }
 
-const freeTime = (primary, invites) => {
+const intersection = (blockA, blockB) => {
+    var start = blockA.start
+    var end = blockA.end
+    var oStart = blockB.start
+    var oEnd = blockB.end
+    if ((start <= oStart) && (oStart < end) && (end < oEnd)) {
+        return { start: oStart, end: end }
+    }
+    else if ((oStart < start) && (start < oEnd) && (oEnd <= end)) {
+        return { start: start, end: oEnd }
+    }
+    else if ((oStart < start) && (start <= end) && (end < oEnd)) {
+        return firstBlock
+    }
+    else if ((start <= oStart) && (oStart <= oEnd) && (oEnd <= end)) {
+        return otherBlock
+    }
+}
+
+const findFreeTimes = (primary, invites) => {
     return new Promise((resolve, reject) => {
         jwtClient.authorize(function (err, tokens) {
             if (err) {
@@ -44,6 +63,7 @@ const freeTime = (primary, invites) => {
                     if (err) {
                         console.log(err)
                         reject(`something went wrong communicating with google calendar api`)
+                        return
                     }
 
                     // Unbookable hours is from 6pm - 10am the next day (non working hours)
@@ -60,7 +80,7 @@ const freeTime = (primary, invites) => {
                     const transform = (email) => {
                         // Create busy time blocks from freebusy response and add "unbookable" hours
                         // Make sure the time is added in so it's sorted
-                        const busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
+                        var busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
                             return {
                                 start: new Date(block.start),
                                 end: new Date(block.end)
@@ -70,19 +90,30 @@ const freeTime = (primary, invites) => {
                             )
 
                         // Create the opposite of the "busy" block that google returns
-                        const freeTimes = [];
-                        if (busyTimes[0].start > new Date()) {
-                            freeTimes.push({ start: new Date(), end: busyTimes[0].start })
+                        var freeTimes = []
+                        // If the next time your busy is in the future and now is
+                        // in between opening and closing time, add some free time
+                        if (busyTimes[0].start > now && now < closingTime && now > openingTime) {
+                            console.log("free today")
+                            freeTimes.push({
+                                start: now,
+                                end: Math.min(new Date(busyTimes[0].start, closingTime))
+                            })
                         }
                         // Find the gaps in busy times to create "free times" blocks
                         for (var i = 0; i < busyTimes.length; i++) {
-                            const block = busyTimes[i]
-                            const next = busyTimes[i + 1]
+                            var block = busyTimes[i]
+                            var next = busyTimes[i + 1]
                             if (next) {
-                                // Add a free block of time from the end of your last meeting the start of the next meeting
-                                freeTimes.push({ start: block.end, end: new Date(next.start) })
+                                var nextStart = new Date(next.start)
+                                // not back to back
+                                if (block.end.toLocaleString() != nextStart.toLocaleString()) {
+                                    // Add a free block of time from the end of your last meeting the start of the next meeting
+                                    freeTimes.push({ start: block.end, end: nextStart })
+                                } else {
+
+                                }
                             } else {
-                                // Add a free block of time until the end of the day after the last meeting
                                 freeTimes.push({ start: block.end, end: closingTime })
                             }
                         }
@@ -91,17 +122,13 @@ const freeTime = (primary, invites) => {
                         }
                     }
 
-                    const stationBusyTimes = Object.keys(stations).map(
-                        transform
-                    )
-
-                    // pairer times
-                    const pairerBusyTimes = participants.map(
-                        transform
-                    )
                     resolve({
-                        stations: stationBusyTimes,
-                        people: pairerBusyTimes
+                        stations: Object.keys(stations).map(
+                            transform
+                        ),
+                        people: participants.map(
+                            transform
+                        )
                     })
                 }
             )
@@ -109,93 +136,150 @@ const freeTime = (primary, invites) => {
     });
 }
 
-//module.exports.freeTime = freeTime
+// find the list of overlapping free times between the first person and all other people
+const findOverlaps = (times) => {
+    return new Promise(
+        (resolve, reject) => {
+            const firstPerson = times.people[0]
+            var overlaps = []
+            for (var i = 1; i < times.people.length; i++) {
+                var other = times.people[i]
+                overlaps = overlaps.concat(
+                    firstPerson.free.reduce((acc, firstBlock) => {
+                        other.free.forEach(
+                            (otherBlock) => {
+                                var intersect = intersection(firstBlock, otherBlock)
+                                if (intersect) {
+                                    acc.push(intersect)
+                                }
+                            }
+                        )
+
+                        return acc
+                    }, [])
+                )
+            }
+
+            resolve({ times: times, overlaps: overlaps })
+        }
+    )
+}
+
+// find the first station with an overlapping open time
+
+const findStation = (overlapResults) => {
+    return new Promise(
+        (resolve, reject) => {
+            const times = overlapResults.times
+            const overlaps = overlapResults.overlaps
+            // find the first station that is open during one of these blocks of time
+            if (!overlaps) {
+                console.log("no people overlaps. skipping station selection")
+                resolve()
+                return
+            }
+            var stationTimes = []
+            console.log("overlaps")
+            console.dir(overlaps, { depth: 4, colors: true })
+            console.log("station times")
+            console.dir(times.stations, { depth: 4, colors: true })
+            overlaps.forEach(
+                (overlap) => {
+                    times.stations.forEach(
+                        (station) => {
+                            station.free.forEach(
+                                (stationBlock) => {
+                                    var start = overlap.start
+                                    var end = overlap.end
+                                    var oStart = stationBlock.start
+                                    var oEnd = stationBlock.end
+                                    if ((start <= oStart) && (oStart < end) && (end < oEnd)) {
+                                        resolve({
+                                            station: station.email,
+                                            time: { start: oStart, end: end }
+                                        })
+                                        return
+                                    }
+                                    else if ((oStart < start) && (start < oEnd) && (oEnd <= end)) {
+                                        resolve({
+                                            station: station.email,
+                                            time: { start: start, end: oEnd }
+                                        })
+                                        return
+                                    }
+                                    else if ((oStart < start) && (start <= end) && (end < oEnd)) {
+                                        resolve({
+                                            station: station.email,
+                                            time: firstBlock
+                                        })
+                                        return
+                                    }
+                                    else if ((start <= oStart) && (oStart <= oEnd) && (oEnd <= end)) {
+                                        resolve({
+                                            station: station.email,
+                                            time: otherBlock
+                                        })
+                                        return
+                                    }
+                                }
+                            )
+                        }
+                    )
+                }
+            )
+            resolve()
+        }
+    )
+}
 
 // returns promising resolving to response from calendar events insert api
 module.exports.bookTime = (primary, invites) => {
-    return freeTime(primary, invites).then((times) => {
-        return new Promise(
-            (resolve, reject) => {
-                // find the list of overlapping free times between the first person and all other people
-                const firstPerson = times.people[0]
-                const secondPerson = times.people[1]
-                console.log("first person free")
-                console.dir(firstPerson.free.map(toLocalTimeBlock), { depth: 4, colors: true })
-
-                console.log("second person free")
-                console.dir(secondPerson.free.map(toLocalTimeBlock), { depth: 4, colors: true })
-
-                // const overlap = first.free[0].start >= second.free[0].start && first.free[0].end <= second.free[1].end)
-                var overlaps = []
-                for (var i = 1; i < times.people.length; i++) {
-                    const other = times.people[i]
-
-
-                    overlaps = overlaps.concat(
-                        firstPerson.free.reduce((acc, firstBlock) => {
-                            const overlap = other.free.find(
-                                (otherBlock) => {
-                                    return firstBlock.start <= otherBlock.start && firstBlock.end >= otherBlock.end
-                                }
-                            );
-                            if (overlap) {
-                                acc.push(
-                                    {
-                                        start: new Date(Math.max(firstBlock.start, overlap.start)),
-                                        end: new Date(Math.min(firstBlock.end, overlap.end))
-                                    }
-                                )
-                            }
-                            return acc
-                        }, [])
-                    )
-                }
-
-                // find a station
-                const station = times.stations[0]
-
-                // book it
-                const overlap = overlaps[0]
-                if (overlap) {
-                    const eventParams = {
-                        summary: "pair time!",
-                        start: {
-                            dateTime: overlap.start.toISOString(),
-                            timeZone: 'US/Eastern'
-                        },
-                        end: {
-                            dateTime: overlap.end.toISOString(),
-                            timeZone: 'US/Eastern'
-                        },
-                        attendees: times.people.map(
-                            (person) => { return { email: person.email } }
-                        ).concat([
-                            { email: station.email }
-                        ])
-                    }
-                    console.dir(eventParams, { depth: 4, colors: true })
-
-                    calendar.events.insert(
-                        {
-                            auth: jwtClient,
-                            calendarId: "primary",
-                            sendNotifications: true,
-                            resource: eventParams
-                        },
-                        (err, response) => {
-                            if (err) {
-                                console.log("error")
-                                console.log(err)
-                                reject("error booking event")
-                            } else {
-                                console.log(response)
-                                resolve(response)
-                            }
+    return findFreeTimes(primary, invites).then(findOverlaps).then(findStation)
+        .then((stationResult) => {
+            return new Promise(
+                (resolve, reject) => {
+                    console.dir(stationResult, { depth: 4, colors: true })
+                    // book it
+                    if (stationResult) {
+                        const eventParams = {
+                            summary: "pair time!",
+                            start: {
+                                dateTime: stationResult.time.start.toISOString(),
+                                timeZone: 'US/Eastern'
+                            },
+                            end: {
+                                dateTime: stationResult.time.end.toISOString(),
+                                timeZone: 'US/Eastern'
+                            },
+                            attendees: invites.concat(primary).map(
+                                (email) => { return { email: email } }
+                            ).concat([
+                                { email: stationResult.station }
+                            ])
                         }
-                    )
-                } else {
-                    reject("no overlap")
-                }
-            })
-    })
+                        //console.dir(eventParams, { depth: 4, colors: true })
+                        // book it!
+                        calendar.events.insert(
+                            {
+                                auth: jwtClient,
+                                calendarId: "primary",
+                                sendNotifications: true,
+                                resource: eventParams
+                            },
+                            (err, response) => {
+                                if (err) {
+                                    console.log("error")
+                                    console.log(err)
+                                    reject("error booking event")
+                                } else {
+                                    console.log(response)
+                                    resolve(response)
+                                }
+                            }
+                        )
+                    } else {
+                        reject("no overlap")
+                    }
+                })
+        })
 }
