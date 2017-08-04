@@ -71,8 +71,10 @@ const authenticate = (payload) => {
 module.exports.pairWith = (req, res) => {
   return authenticate(req.body)
     .then((cmd) => {
-
-      const cmdPromise = command(cmd).then(
+      res.json({
+        text: `finding you some space`
+      })
+      return command(cmd).then(
         (payload) => {
           console.log("responding with...")
           console.dir(payload, { depth: 4, colors: true })
@@ -92,11 +94,6 @@ module.exports.pairWith = (req, res) => {
           res.json({ text: err.toString() })
         }
         )
-
-      res.json({
-        text: `finding you some space`
-      })
-      return cmdPromise
     }).catch(
     (err) => {
       res.json({ text: err })
