@@ -66,6 +66,7 @@ const findFreeTimes = (primary, invites) => {
                     }
                 },
                 function freeBusyHandler(err, response) {
+                    console.log("got freebusy response from google")
                     if (err) {
                         console.log("error communicating with google freeBusy.query")
                         console.log(err)

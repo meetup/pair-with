@@ -79,6 +79,7 @@ module.exports.pairWith = (req, res) => {
         }
       ).then(
         (serverResponse) => {
+          console.log("following up with actual command")
           const webhook = new IncomingWebhook(cmd.response_url)
           return command(cmd).then(
             (payload) => {
