@@ -288,14 +288,17 @@ module.exports.bookTime = (primary, invites) => {
                     if (stationResult) {
                         console.log("booking time")
                         debug(toLocalTimeBlock(stationResult.time))
+                        const timestamp = (date) => {
+                            return new Date(date.getTime() - 240).toISOString()
+                        }
                         const eventParams = {
                             summary: "pair time!",
                             start: {
-                                dateTime: stationResult.time.start.toISOString(),
+                                dateTime: timestamp(stationResult.time.start),
                                 timeZone: 'US/Eastern'
                             },
                             end: {
-                                dateTime: stationResult.time.end.toISOString(),
+                                dateTime: timestamp(stationResult.time.end),
                                 timeZone: 'US/Eastern'
                             },
                             attendees: invites.concat(primary).map(
