@@ -1,10 +1,10 @@
-# pair with [![Build Status](https://travis-ci.org/meetup/pair-with.svg?branch=master)](https://travis-ci.org/meetup/pair-with)
+# 👩‍💻 Pair With 👨‍💻 [![Build Status](https://travis-ci.org/meetup/pair-with.svg?branch=master)](https://travis-ci.org/meetup/pair-with)
 
-> 👩‍💻 👨‍💻  slack command for scheduling pair station time
+a slack slash command for scheduling pair station time
 
-
+### Useage
 ```
 /pair-with @friend @stranger
 ```
 
-Meetup 2017
+Copyright (c) 2017 Meetup
