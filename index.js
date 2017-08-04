@@ -76,6 +76,8 @@ module.exports.pairWith = (req, res) => {
       })
       command(cmd).then(
         (payload) => {
+          console.log("responding with...")
+          console.dir(payload, { depth: 4, colors: true })
           var webhook = new IncomingWebhook(cmd.response_url);
           webhook.send(payload, function (err, header, statusCode, body) {
             if (err) {
