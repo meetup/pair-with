@@ -289,7 +289,7 @@ module.exports.bookTime = (primary, invites) => {
                         console.log("booking time")
                         debug(toLocalTimeBlock(stationResult.time))
                         const timestamp = (date) => {
-                            return new Date(date.getTime() - 240).toISOString()
+                            return date.toISOString()
                         }
                         const eventParams = {
                             summary: "pair time!",
