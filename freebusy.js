@@ -20,8 +20,8 @@ const toLocalTimeBlock = (block) => {
 }
 
 const debug = (obj) => {
-    console.dir(obj, { depth: 4, colors: true })
-    //console.log(obj)
+    //console.dir(obj, { depth: 4, colors: true })
+    console.log(obj)
 }
 
 const intersection = (blockA, blockB) => {
