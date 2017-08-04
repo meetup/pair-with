@@ -39,6 +39,9 @@ const intersection = (blockA, blockB) => {
 }
 
 const findFreeTimes = (primary, invites) => {
+    console.log("finding email for primary " + primary)
+    console.log("and invites")
+    console.log(invites)
     return new Promise((resolve, reject) => {
         jwtClient.authorize(function (err, tokens) {
             if (err) {
@@ -65,6 +68,7 @@ const findFreeTimes = (primary, invites) => {
                         reject(`something went wrong communicating with google calendar api`)
                         return
                     }
+                    console.dir(response, { depth: 4, colors: true })
 
                     // Unbookable hours is from 6pm - 10am the next day (non working hours)
                     const now = new Date()
@@ -78,6 +82,8 @@ const findFreeTimes = (primary, invites) => {
                     ]
 
                     const transform = (email) => {
+                        console.log("transforming email " + email)
+                        console.dir(response.calendars[email], { depth: 4, colors: true })
                         // Create busy time blocks from freebusy response and add "unbookable" hours
                         // Make sure the time is added in so it's sorted
                         var busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
