@@ -97,6 +97,8 @@ module.exports.pairWith = (req, res) => {
         }
         )
     }).catch(
-    (err) => res.json({ text: err })
+    (err) => {
+      res.json({ text: err })
+    }
     )
 }

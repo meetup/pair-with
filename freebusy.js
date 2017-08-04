@@ -31,10 +31,10 @@ const intersection = (blockA, blockB) => {
         return { start: start, end: oEnd }
     }
     else if ((oStart < start) && (start <= end) && (end < oEnd)) {
-        return firstBlock
+        return blockA
     }
     else if ((start <= oStart) && (oStart <= oEnd) && (oEnd <= end)) {
-        return otherBlock
+        return blockB
     }
 }
 
