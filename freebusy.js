@@ -325,7 +325,6 @@ module.exports.bookTime = (primary, invites) => {
                                 }
                             }
                         )
-                        resolve()
                     } else {
                         console.log("no overlap")
                         reject("no station overlap")
