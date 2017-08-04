@@ -19,6 +19,11 @@ const toLocalTimeBlock = (block) => {
     return { start: block.start.toLocaleString(), end: block.end.toLocaleString() }
 }
 
+const debug = (obj) => {
+    //console.dir(obj, { depth: 4, colors: true })
+    console.log(obj)
+}
+
 const intersection = (blockA, blockB) => {
     var start = blockA.start
     var end = blockA.end
@@ -73,7 +78,7 @@ const findFreeTimes = (primary, invites) => {
                         reject(`something went wrong communicating with google calendar api`)
                         return
                     }
-                    console.dir(response, { depth: 4, colors: true })
+                    debug(response)
 
                     // Unbookable hours is from 6pm - 10am the next day (non working hours)
                     const now = new Date()
@@ -88,7 +93,7 @@ const findFreeTimes = (primary, invites) => {
 
                     const transform = (email) => {
                         console.log("transforming email " + email)
-                        console.dir(response.calendars[email], { depth: 4, colors: true })
+                        debug(response.calendars[email])
                         // Create busy time blocks from freebusy response and add "unbookable" hours
                         // Make sure the time is added in so it's sorted
                         var busyTimes = response.calendars[email].busy.concat(unbookable).map((block) => {
@@ -197,10 +202,9 @@ const findStation = (overlapResults) => {
             }
             var stationTimes = []
             console.log("overlaps")
-            console.dir(overlaps, { depth: 4, colors: true })
+            debug(overlaps)
             console.log("station times")
-            console.dir("test")
-            console.dir(times.stations, { depth: 4, colors: true })
+            debug(times.stations)
             overlaps.forEach(
                 (overlap) => {
                     times.stations.forEach(
@@ -250,6 +254,9 @@ const findStation = (overlapResults) => {
     )
 }
 
+
+
+
 // returns promising resolving to response from calendar events insert api
 module.exports.bookTime = (primary, invites) => {
     return findFreeTimes(primary, invites).then(findOverlaps).then(findStation)
@@ -257,7 +264,7 @@ module.exports.bookTime = (primary, invites) => {
             return new Promise(
                 (resolve, reject) => {
                     console.log("booking time")
-                    console.dir(stationResult, { depth: 4, colors: true })
+                    debug(stationResult)
                     // book it
                     if (stationResult) {
                         const eventParams = {
@@ -276,7 +283,7 @@ module.exports.bookTime = (primary, invites) => {
                                 { email: stationResult.station }
                             ])
                         }
-                        console.dir(eventParams, { depth: 4, colors: true })
+                        debug(eventParams)
                         // book it!
                         console.log("booking event")
                         calendar.events.insert(
@@ -292,7 +299,7 @@ module.exports.bookTime = (primary, invites) => {
                                     console.log(err)
                                     reject("error booking event")
                                 } else {
-                                    console.log(response)
+                                    debug(response)
                                     resolve(response)
                                 }
                             }
