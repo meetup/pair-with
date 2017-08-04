@@ -42,7 +42,7 @@ const command = (cmd) => {
     google.bookTime(mentiondb["@" + cmd.user_name], emails)
       .then((calendarResponse) => {
         resolve({
-          text: `you're booked at ${calendarResponse.location}`,
+          text: `:woman_technologist::male_technologist: you're booked at ${calendarResponse.location}`,
            attachments: [
                { text:`you can change your pair session <${calendarResponse.htmlLink}|here>` }
             ]
