@@ -1,4 +1,4 @@
-GCP_PROJECT ?= ai-blt
+GCP_PROJECT ?= meetup-prod
 STAGE_BUCKET ?= pair-with
 FUNCTION_NAME ?= pairWith
 FUNCTION_MEMORY ?= 128MB
