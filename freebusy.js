@@ -46,6 +46,7 @@ const findFreeTimes = (primary, invites) => {
         jwtClient.authorize(function (err, tokens) {
             if (err) {
                 console.log(err);
+                reject(`something went wrong authenticating with google`)
                 return;
             }
             const participants = [primary].concat(invites)
@@ -127,7 +128,11 @@ const findFreeTimes = (primary, invites) => {
                             email: email, busy: busyTimes, free: freeTimes
                         }
                     }
-
+                    console.log("resolving times for the following")
+                    console.log("stations")
+                    console.log(Object.keys(stations))
+                    console.log("people")
+                    console.log(participants)
                     resolve({
                         stations: Object.keys(stations).map(
                             transform
@@ -165,7 +170,7 @@ const findOverlaps = (times) => {
                     }, [])
                 )
             }
-
+            console.log("resolving to times and overlaps")
             resolve({ times: times, overlaps: overlaps })
         }
     )
@@ -263,8 +268,9 @@ module.exports.bookTime = (primary, invites) => {
                                 { email: stationResult.station }
                             ])
                         }
-                        //console.dir(eventParams, { depth: 4, colors: true })
+                        console.dir(eventParams, { depth: 4, colors: true })
                         // book it!
+                        console.log("booking event")
                         calendar.events.insert(
                             {
                                 auth: jwtClient,
