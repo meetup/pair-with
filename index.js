@@ -96,6 +96,8 @@ module.exports.pairWith = (req, res) => {
         )
     }).catch(
     (err) => {
+      console.log("command failed with error")
+      console.dir(err, { depth: 4, colors: true })
       res.json({ text: err })
     }
     )
