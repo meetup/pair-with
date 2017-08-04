@@ -199,6 +199,7 @@ const findStation = (overlapResults) => {
             console.log("overlaps")
             console.dir(overlaps, { depth: 4, colors: true })
             console.log("station times")
+            console.dir("test")
             console.dir(times.stations, { depth: 4, colors: true })
             overlaps.forEach(
                 (overlap) => {
