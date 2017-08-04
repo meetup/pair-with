@@ -307,7 +307,7 @@ module.exports.bookTime = (primary, invites) => {
                         debug(eventParams)
                         // book it!
                         console.log("booking event")
-                        /*calendar.events.insert(
+                        calendar.events.insert(
                             {
                                 auth: jwtClient,
                                 calendarId: "primary",
@@ -324,7 +324,7 @@ module.exports.bookTime = (primary, invites) => {
                                     resolve(response)
                                 }
                             }
-                        )*/
+                        )
                         resolve()
                     } else {
                         console.log("no overlap")
