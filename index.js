@@ -74,6 +74,7 @@ const authenticate = (payload) => {
 
 // cloud function module export
 module.exports.pairWith = (req, res) => {
+  console.log("this request was handled in a tz with offset of " + new Date().getTimezoneOffset())
   return authenticate(req.body)
     .then((cmd) => {
       return command(cmd).then(
