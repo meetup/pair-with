@@ -87,7 +87,13 @@ module.exports.pairWith = (req, res) => {
             }
           });
         }
-      )
+      ).catch(
+        (err) => {
+          console.log("responding with error")
+          console.dir(err, { depth: 4, colors: true })
+          res.json({ text: err.toString() })
+        }
+        )
     }).catch(
     (err) => res.json({ text: err })
     )
