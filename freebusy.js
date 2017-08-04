@@ -5,6 +5,8 @@ const key = require('./credentials.json')
 // ask for https://www.googleapis.com/auth/calendar scope
 // https://developers.google.com/identity/protocols/OAuth2ServiceAccount?hl=en_US#delegatingauthority
 
+const moment = require('moment-timezone')
+
 const stations = require("./stationdb.json")
 
 const jwtClient = new google.auth.JWT(
@@ -289,8 +291,9 @@ module.exports.bookTime = (primary, invites) => {
                         console.log("booking time")
                         debug(toLocalTimeBlock(stationResult.time))
                         const timestamp = (date) => {
-                            return date.toISOString()
+                            return moment.tz(date, "US/Eastern").format()
                         }
+
                         const eventParams = {
                             summary: "pair time!",
                             start: {
@@ -309,7 +312,6 @@ module.exports.bookTime = (primary, invites) => {
                         }
                         debug(eventParams)
                         // book it!
-                        console.log("booking event")
                         calendar.events.insert(
                             {
                                 auth: jwtClient,
