@@ -202,7 +202,6 @@ const findStation = (overlapResults) => {
                 resolve()
                 return
             }
-            var stationTimes = []
             console.log("overlaps")
             debug(overlaps)
             console.log("station times")
@@ -265,10 +264,10 @@ module.exports.bookTime = (primary, invites) => {
         .then((stationResult) => {
             return new Promise(
                 (resolve, reject) => {
-                    console.log("booking time")
-                    debug(stationResult)
                     // book it
                     if (stationResult) {
+                        console.log("booking time")
+                        debug(stationResult)
                         const eventParams = {
                             summary: "pair time!",
                             start: {
