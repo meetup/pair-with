@@ -289,5 +289,3 @@ module.exports.bookTime = (primary, invites) => {
                 })
         })
 }
-
-module.exports.bookTime("doug@meetup.com", ["agaither@meetup.com"])
