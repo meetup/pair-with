@@ -32,7 +32,7 @@ const command = (cmd) => {
         return acc
       }, []
     )
-    google.bookTime(mentiondb(cmd.user_name), emails)
+    google.bookTime(mentiondb[cmd.user_name], emails)
       .then((calendarResponse) => {
         resolve({
           text: `all set. you can change your pair session here <${calendarResponse.htmlLink}|here>`
