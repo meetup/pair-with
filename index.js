@@ -76,24 +76,30 @@ module.exports.pairWith = (req, res) => {
       })
       console.log("response result")
       console.log(responseResult)
+      const webhook = new IncomingWebhook(cmd.response_url)
       return command(cmd).then(
         (payload) => {
           console.log("responding with...")
           console.dir(payload, { depth: 4, colors: true })
-          var webhook = new IncomingWebhook(cmd.response_url);
           webhook.send(payload, function (err, header, statusCode, body) {
             if (err) {
               console.log('Error:', err);
             } else {
               console.log('Received', statusCode, 'from Slack');
             }
-          });
+          })
         }
       ).catch(
         (err) => {
           console.log("responding with error")
           console.dir(err, { depth: 4, colors: true })
-          res.json({ text: err.toString() })
+          webhook.send({ text: err.toString() }, function (err, header, statusCode, body) {
+            if (err) {
+              console.log('Error:', err);
+            } else {
+              console.log('Received', statusCode, 'from Slack');
+            }
+          })
         }
         )
     }).catch(
