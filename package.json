@@ -2,7 +2,8 @@
   "dependencies": {
     "@slack/client": "^3.10.0",
     "dotenv": "4.0.0",
-    "googleapis": "^20.1.0"
+    "googleapis": "^20.1.0",
+    "moment-timezone": "^0.5.13"
   },
   "scripts": {
     "test": "ava -T 20s --verbose test/*.test.js"
