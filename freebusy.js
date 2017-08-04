@@ -133,6 +133,8 @@ const findFreeTimes = (primary, invites) => {
                                 freeTimes.push({ start: block.end, end: closingTime })
                             }
                         }
+                        console.log("free times for " + email)
+                        debug(freeTimes)
                         return {
                             email: email, busy: busyTimes, free: freeTimes
                         }
