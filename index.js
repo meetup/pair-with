@@ -50,7 +50,7 @@ const command = (cmd) => {
         console.log("error")
         console.log(err)
         resolve({
-          text: `failed to book a room with ${cmd.text}`
+          text: `failed to book a room with ${cmd.text}: ${err}`
         })
       }
       )
