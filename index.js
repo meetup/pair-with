@@ -47,6 +47,8 @@ const command = (cmd) => {
       })
       .catch(
       (err) => {
+        console.log("error")
+        console.log(err)
         resolve({
           text: `failed to book a room with ${cmd.text}`
         })
