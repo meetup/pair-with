@@ -21,6 +21,6 @@ Generate a local json database of @mention handles to email addresses
 $ SLACK_BOT_TOKEN=tokenvalue node mentiondb-gen.js > mentiondb.json
 ```
 
-create a json file called stationdb.json containing a json object with pairing station calendar ids to pairing station names
+create a json file called stationdb.json containing a json object with pairing station calendar ids to pairing station names                                    
 
 Copyright (c) 2017 Meetup
